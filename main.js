@@ -31,19 +31,22 @@ const getTopSights = async (page) => {
     (e) => e
   );
 
-  const children = childrens[0];
+  let actualChildren = 0;
+  const children = childrens[actualChildren];
 
   await children.click();
+  const openedIndex = actualChildren + 3 - actualChildren;
   await page.waitForTimeout(1000);
-  const newChildrens = await page.$$(
-    'div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > *',
+  const descriptionDiv = await page.$(
+    `div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > div:nth-child(${openedIndex}) > div > *:nth-child(1) > div > div:nth-child(3) >div > div:nth-child(2)`,
     (e) => e
   );
 
-  const newChildren = newChildrens[2];
-
-  const singleChildren = await page.evaluate((el) => el.innerText, newChildren);
-  console.log(singleChildren);
+  const description = await page.evaluate((el) => {
+    const text = el.innerText;
+    return text.substr(0, text.length - 20);
+  }, descriptionDiv);
+  console.log(description);
 };
 
 const main = async () => {
