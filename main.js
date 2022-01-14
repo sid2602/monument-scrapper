@@ -26,27 +26,67 @@ const fillSearchMonumentInput = async (page) => {
 };
 
 const getTopSights = async (page) => {
-  const childrens = await page.$$(
-    'div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > *',
-    (e) => e
-  );
+  const topSights = `div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > *`;
 
-  let actualChildren = 0;
-  const children = childrens[actualChildren];
+  const childrens = await page.$$(topSights, (e) => e);
 
-  await children.click();
-  const openedIndex = actualChildren + 3 - actualChildren;
-  await page.waitForTimeout(1000);
-  const descriptionDiv = await page.$(
-    `div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > div:nth-child(${openedIndex}) > div > *:nth-child(1) > div > div:nth-child(3) >div > div:nth-child(2)`,
-    (e) => e
-  );
+  for (
+    let actualChildrenIndex = 0;
+    // actualChildrenIndex < 1;
+    actualChildrenIndex < childrens.length;
+    actualChildrenIndex++
+  ) {
+    const children = childrens[actualChildrenIndex];
+    const basicSightLinkPrefix = ` div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > div:nth-child(${
+      actualChildrenIndex + 1
+    }) > div > div >div >div:nth-child(2) > div`;
 
-  const description = await page.evaluate((el) => {
-    const text = el.innerText;
-    return text.substr(0, text.length - 20);
-  }, descriptionDiv);
-  console.log(description);
+    const basicSights = await page.$$(`${basicSightLinkPrefix}`, (e) => e);
+
+    const name = await page.evaluate((el) => {
+      return el.innerText;
+    }, basicSights[0]);
+
+    console.log(name);
+
+    const shortDesription = await page.evaluate((el) => {
+      return el.innerText;
+    }, basicSights[2]);
+
+    console.log(shortDesription);
+
+    const openedIndex = actualChildrenIndex + 3 - actualChildrenIndex;
+    const extendedSightLinkPrefix = `div[aria-label="Top sights"] > div:nth-child(2) > div:nth-child(2) > div:nth-child(${openedIndex}) > div > `;
+    const extendedSightLinkButtonSufix = `*:nth-child(2) > div > button`;
+    const desriptionExtendedSightLinkSufix = `*:nth-child(1) > div > div:nth-child(3) >div > div:nth-child(2)`;
+
+    await children.click();
+    await page.waitForTimeout(1000);
+
+    const descriptionDiv = await page.$(
+      `${extendedSightLinkPrefix} ${desriptionExtendedSightLinkSufix}`,
+      (e) => e
+    );
+
+    const description = await page.evaluate((el) => {
+      const text = el.innerText;
+      return text.substr(0, text.length - 20);
+    }, descriptionDiv);
+
+    console.log(description, "\n");
+
+    const closeBtn = await page.$(
+      `${extendedSightLinkPrefix} ${extendedSightLinkButtonSufix}`,
+      (e) => e
+    );
+
+    await page.evaluate(() => {
+      window.scrollBy(0, -100);
+    });
+    await page.waitForTimeout(200);
+    closeBtn.click();
+    await page.waitForTimeout(1000);
+  }
 };
 
 const main = async () => {
